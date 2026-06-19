@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STAR Quantum Cyber-Terminal & Casino</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1"></script>
+    <link rel="stylesheet" href="sater.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="main-content">
+        <div class="panel">
+            <div class="dashboard">
+                <div class="metric-box">
+                    <div class="metric-label">Общий Капитал (USD)</div>
+                    <div id="equity" class="metric-value">1000.00</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">Свободные USD</div>
+                    <div id="balance" class="metric-value" style="color: var(--blue);">750.00</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">ТОКЕНЫ STAR (Баланс)</div>
+                    <div id="assetsTop" class="metric-value" style="color: var(--yellow);">25.00 STAR</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">Рыночный курс STAR</div>
+                    <div id="price" class="metric-value" style="color: #fff;">10.00</div>
+                </div>
+            </div>
+            
+            <div class="chart-box">
+                <canvas id="terminalChart"></canvas>
+            </div>
+
+            <div class="tape-container">
+                <div id="whaleTape" class="tape-row txt-muted">Система стабилизирована. Данные синхронизированы в LocalStorage.</div>
+            </div>
+
+            <div class="trade-zone">
+                <button id="sessionBtn" class="btn btn-outline" onclick="toggleMarket()">Включить Живой Рынок STAR</button>
+                
+                <div class="trade-grid">
+                    <div class="order-input-group">
+                        <label>Инвестировать USD в STAR</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="orderAmount" value="100">
+                            <span class="unit">USD</span>
+                        </div>
+                        <div class="percent-row">
+                            <button class="btn-pct" onclick="setBuyPercent(0.25)">25%</button>
+                            <button class="btn-pct" onclick="setBuyPercent(0.50)">50%</button>
+                            <button class="btn-pct" onclick="setBuyPercent(0.75)">75%</button>
+                            <button class="btn-pct" onclick="setBuyPercent(1.00)">100%</button>
+                        </div>
+                    </div>
+
+                    <div class="order-input-group">
+                        <label>Вывести STAR обратно в USD</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sellAmount" value="0" step="0.1">
+                            <span class="unit">STAR</span>
+                        </div>
+                        <div class="percent-row">
+                            <button class="btn-pct" onclick="setSellPercent(0.25)">25%</button>
+                            <button class="btn-pct" onclick="setSellPercent(0.50)">50%</button>
+                            <button class="btn-pct" onclick="setSellPercent(0.75)">75%</button>
+                            <button class="btn-pct" onclick="setSellPercent(1.00)">100%</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions-group">
+                    <button id="buyBtn" class="btn btn-green" onclick="manualBuy()" disabled>КУПИТЬ ТОКЕНЫ</button>
+                    <button id="sellBtn" class="btn btn-red" onclick="manualSell()" disabled>ПРОДАТЬ В USD</button>
+                </div>
+
+                <div class="metric-box" style="margin-bottom: 14px; background: #06040a;">
+                    <div class="metric-label">Сводка по открытым позициям</div>
+                    <div id="assetsRight" class="metric-value" style="font-size: 16px; color: var(--yellow);">25.00 STAR</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text-muted); flex-wrap: wrap; gap: 4px;">
+                        <span id="avgPrice">Средняя цена входа: $0</span>
+                        <span id="positionPnl">PnL активов: 0%</span>
+                    </div>
+                </div>
+                
+                <button class="mini-bet-btn" onclick="resetAllData()" style="align-self: flex-end; margin-bottom: 10px; padding: 4px 8px;">Сбросить сохранения (Тест)</button>
+            </div>
+
+            <h3 class="section-title">⚡ КИБЕРПАНК ИГРОВОЙ ХАБ / БЕЗ БАГОВ И ЛИМИТОВ</h3>
+            
+            <div class="games-grid">
+                <div class="game-card">
+                    <div class="game-title">✈️ 1. STAR Crash / Авиатор</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_crash" value="2" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('crash', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('crash', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('crash', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div id="crashArena">
+                            <div id="crashMux" style="position:absolute; top:10px; right:10px; font-size:18px; font-weight:900; color:var(--yellow)">1.00x</div>
+                            <div id="rocket">🚀</div>
+                        </div>
+                        <div style="position:absolute; bottom:8px; width:100%; text-align:center;">
+                            <button class="game-btn" id="crashStart" onclick="startCrash()">ВЗЛЕТ</button>
+                            <button class="game-btn yellow-btn" id="crashCash" onclick="cashoutCrash()" style="display:none;">ЗАБРАТЬ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card gold-top">
+                    <div class="game-title">💣 2. Крипто-Сапер</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_mines" value="2" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('mines', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('mines', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('mines', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div class="mines-board" id="minesBoard"></div>
+                        <button class="game-btn yellow-btn" id="minesGenBtn" onclick="initMines()" style="margin-top:8px; padding:4px 12px;">Ставка и Старт</button>
+                    </div>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">🪙 3. Двойной Флип (X2)</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_coin" value="1" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('coin', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('coin', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('coin', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div class="coin-element" id="visualCoin">★</div>
+                        <div>
+                            <button class="game-btn" onclick="playCoin(0)">ОРЁЛ</button>
+                            <button class="game-btn" onclick="playCoin(1)">РЕШКА</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card gold-top">
+                    <div class="game-title">🔮 4. Неоновый Провидец (X5)</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_guess" value="1" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('guess', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('guess', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('guess', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div style="margin-bottom:8px; font-size:10px;" id="oracleStatus">Выбери сектор матрицы:</div>
+                        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:4px;">
+                            <button class="mine-cell" onclick="playGuess(1)">1</button>
+                            <button class="mine-cell" onclick="playGuess(3)">3</button>
+                            <button class="mine-cell" onclick="playGuess(5)">5</button>
+                            <button class="mine-cell" onclick="playGuess(7)">7</button>
+                            <button class="mine-cell" onclick="playGuess(9)">9</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">📦 5. Хранилища Альянса (X2.5)</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_shell" value="2" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('shell', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('shell', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('shell', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div class="shells-container">
+                            <div class="shell-box" id="sb1" onclick="playShell(1)">📦</div>
+                            <div class="shell-box" id="sb2" onclick="playShell(2)">📦</div>
+                            <div class="shell-box" id="sb3" onclick="playShell(3)">📦</div>
+                        </div>
+                        <div id="shellStatus" style="margin-top:10px; font-size:10px; color: var(--text-muted);">Выбери сундук с ядром</div>
+                    </div>
+                </div>
+
+                <div class="game-card gold-top">
+                    <div class="game-title">🎡 6. Колесо Ликвидности</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_wheel" value="2" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('wheel', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('wheel', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('wheel', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div class="wheel-plate" id="vWheel">🔯</div>
+                        <button class="game-btn yellow-btn" onclick="playWheel()" style="margin-top:10px;">КРУТИТЬ МАТРИЦУ</button>
+                    </div>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">🏎️ 7. Гонки Репликантов (X2)</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_race" value="2" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('race', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('race', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('race', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view" style="justify-content: flex-start; align-items: stretch;">
+                        <div class="race-track"><div class="race-car" id="car1">🏎️</div><div class="finish-line"></div></div>
+                        <div class="race-track"><div class="race-car" id="car2">🚀</div><div class="finish-line"></div></div>
+                        <div style="text-align:center; margin-top:10px;">
+                            <button class="game-btn" onclick="startRace('1')">Скорпион</button>
+                            <button class="game-btn" onclick="startRace('2')">Кентавр</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card gold-top">
+                    <div class="game-title">🃏 8. Синдикат-Блэкджек (X2.5)</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_bj" value="2" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('bj', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('bj', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('bj', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div id="bjStatus" style="font-weight:bold; font-size:11px;">Собери 18-21 на столе:</div>
+                        <div class="card-deck" id="bjDeck"></div>
+                        <div style="margin-top: 8px;">
+                            <button class="game-btn" onclick="playBJ()" id="bjBtn">Взять карту</button>
+                            <button class="game-btn yellow-btn" onclick="resetBJ()" id="bjResetBtn" style="display:none;">Сбросить руку</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">🔐 9. Дешифратор Ядра (X2)</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_safe" value="2" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('safe', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('safe', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('safe', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div id="safeLight" style="width:12px; height:12px; background:var(--red); border-radius:50%; margin-bottom:8px; box-shadow: var(--neon-red);"></div>
+                        <div id="safeStatus" style="margin-bottom:8px; font-size:10px;">Защита активна</div>
+                        <div>
+                            <button class="game-btn" onclick="playSafe(true)">ЧЁТ</button>
+                            <button class="game-btn" onclick="playSafe(false)">НЕЧЁТ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card gold-top">
+                    <div class="game-title">🎟️ 10. Скретч-Дроп Секторов (X4)</div>
+                    <div class="bet-control-block">
+                        <label>Bet:</label>
+                        <input type="number" id="bet_scratch" value="2" min="0.1" step="0.1">
+                        <button class="mini-bet-btn" onclick="setMiniBet('scratch', 0.5)">Мин</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('scratch', 'half')">1/2</button>
+                        <button class="mini-bet-btn" onclick="setMiniBet('scratch', 'all')">Всё</button>
+                    </div>
+                    <div class="game-view">
+                        <div style="display:flex; gap:8px;" id="scratchBox">
+                            <div class="mine-cell" onclick="scratchCard(this, 0)">?</div>
+                            <div class="mine-cell" onclick="scratchCard(this, 1)">?</div>
+                            <div class="mine-cell" onclick="scratchCard(this, 2)">?</div>
+                        </div>
+                        <div id="scratchStatus" style="font-size:10px; margin-top:10px; color:var(--text-muted);">Стирай защитный слой</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="panel">
+            <div class="metric-label">Биржевой Лог Ордеров</div>
+            <div id="log" class="log-window">Включите котировки для синхронизации...</div>
+        </div>
+    </div>
+</div>
+
+<script src="java.js"></script>
+</body>
+</html>
